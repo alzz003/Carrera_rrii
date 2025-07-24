@@ -473,9 +473,7 @@
                 height: 95vh;
                 margin: 1% auto;
             }
-        }
-
-        @media (max-width: 768px) {
+            
             .subjects-grid {
                 grid-template-columns: 1fr;
             }
@@ -672,8 +670,43 @@
         const scholarshipGoals = [30, 80, 120, 160]; // Créditos acumulativos por año
         let currentYear = 1;
 
-        // Estado de escolaridad (notas y tipo de aprobación)
+        // Estado de materias completadas y escolaridad (CON GUARDADO AUTOMÁTICO)
+        let completedSubjects = new Set();
         let subjectGrades = {};
+
+        // CARGAR DATOS GUARDADOS al iniciar
+        function loadSavedData() {
+            try {
+                // Cargar materias completadas
+                const savedCompleted = localStorage.getItem('completedSubjects');
+                if (savedCompleted) {
+                    completedSubjects = new Set(JSON.parse(savedCompleted));
+                }
+                
+                // Cargar notas y datos de escolaridad
+                const savedGrades = localStorage.getItem('subjectGrades');
+                if (savedGrades) {
+                    subjectGrades = JSON.parse(savedGrades);
+                }
+                
+                console.log('✅ Datos cargados correctamente');
+            } catch (error) {
+                console.log('Iniciando con datos vacíos', error);
+                completedSubjects = new Set();
+                subjectGrades = {};
+            }
+        }
+
+        // GUARDAR DATOS automáticamente
+        function saveData() {
+            try {
+                localStorage.setItem('completedSubjects', JSON.stringify([...completedSubjects]));
+                localStorage.setItem('subjectGrades', JSON.stringify(subjectGrades));
+                console.log('💾 Datos guardados automáticamente');
+            } catch (error) {
+                console.error('Error al guardar:', error);
+            }
+        }
 
         function createSubjectCard(subject, index, cycle) {
             const subjectId = `${cycle}-${index}`;
@@ -751,86 +784,28 @@
         }
 
         function renderSubjects() {
+            console.log('🎨 Renderizando materias...');
+            
             Object.keys(subjects).forEach(cycle => {
+                console.log(`📚 Renderizando ciclo: ${cycle}`);
                 const container = document.getElementById(`${cycle}-subjects`);
+                
                 if (container) {
                     container.innerHTML = ''; // Limpiar contenedor
+                    console.log(`✅ Contenedor encontrado para ${cycle}, agregando ${subjects[cycle].length} materias`);
+                    
                     subjects[cycle].forEach((subject, index) => {
                         const card = createSubjectCard(subject, index, cycle);
                         container.appendChild(card);
                     });
+                    
+                    console.log(`✅ Ciclo ${cycle} renderizado con ${subjects[cycle].length} materias`);
                 } else {
-                    console.error(`Container not found: ${cycle}-subjects`);
+                    console.error(`❌ Container NO encontrado: ${cycle}-subjects`);
                 }
             });
-        }
-
-        function showGitHubInstructions() {
-            alert(`🚀 ¡HOSTEAR GRATIS EN GITHUB PAGES!
-
-📋 PASOS SÚPER FÁCILES:
-
-1. 🌐 Ve a github.com y crea una cuenta gratis
-
-2. ➕ Crea un nuevo repositorio:
-   • Nombre: "mi-carrera-rrii"
-   • ✅ Marca "Public"
-   • ✅ Marca "Add a README file"
-
-3. 📁 Sube tu archivo:
-   • Clic en "Add file" > "Create new file"
-   • Nombre: "index.html"
-   • Copia TODO el código de esta página
-   • Clic en "Commit changes"
-
-4. 🌟 Activar GitHub Pages:
-   • Ve a Settings del repositorio
-   • Scroll hasta "Pages"
-   • Source: "Deploy from a branch"
-   • Branch: "main"
-   • Folder: "/ (root)"
-   • Clic "Save"
-
-5. 🎉 ¡LISTO! En 5 minutos tendrás tu URL:
-   https://tu-usuario.github.io/mi-carrera-rrii
-
-💡 BONUS: Cada vez que actualices el código, la página se actualiza automáticamente!
-
-¿Necesitas ayuda? ¡Te ayudo paso a paso! 😊`);
-        }
-
-        function showGitHubInstructions() {
-            alert(`🚀 ¡HOSTEAR GRATIS EN GITHUB PAGES!
-
-📋 PASOS SÚPER FÁCILES:
-
-1. 🌐 Ve a github.com y crea una cuenta gratis
-
-2. ➕ Crea un nuevo repositorio:
-   • Nombre: "mi-carrera-rrii"
-   • ✅ Marca "Public"
-   • ✅ Marca "Add a README file"
-
-3. 📁 Sube tu archivo:
-   • Clic en "Add file" > "Create new file"
-   • Nombre: "index.html"
-   • Copia TODO el código de esta página
-   • Clic en "Commit changes"
-
-4. 🌟 Activar GitHub Pages:
-   • Ve a Settings del repositorio
-   • Scroll hasta "Pages"
-   • Source: "Deploy from a branch"
-   • Branch: "main"
-   • Folder: "/ (root)"
-   • Clic "Save"
-
-5. 🎉 ¡LISTO! En 5 minutos tendrás tu URL:
-   https://tu-usuario.github.io/mi-carrera-rrii
-
-💡 BONUS: Cada vez que actualices el código, la página se actualiza automáticamente!
-
-¿Necesitas ayuda? ¡Te ayudo paso a paso! 😊`);
+            
+            console.log('🎉 Renderizado completo');
         }
 
         function openEscolaridadModal() {
@@ -1014,21 +989,37 @@
 
         // INICIALIZAR la aplicación
         function initApp() {
+            console.log('🚀 Iniciando aplicación...');
+            console.log('Estado DOM:', document.readyState);
+            
+            // Verificar que los contenedores existan
+            const containers = ['inicial-subjects', 'orientado-subjects', 'profesional-subjects', 'opcionales-subjects'];
+            const missing = containers.filter(id => !document.getElementById(id));
+            
+            if (missing.length > 0) {
+                console.error('❌ Contenedores faltantes:', missing);
+                setTimeout(initApp, 100); // Reintentar en 100ms
+                return;
+            }
+            
+            console.log('✅ Todos los contenedores encontrados');
+            
             loadSavedData(); // Cargar datos guardados
             renderSubjects(); // Crear las tarjetas
             updateProgress(); // Actualizar progreso
-            console.log('App inicializada correctamente');
+            
+            console.log('🎉 App inicializada correctamente');
         }
 
         // Inicializar cuando se carga la página completamente
-        document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('load', function() {
+            console.log('📱 Página cargada, iniciando app...');
             initApp();
         });
 
-        // Por si acaso también inicializar al cargar el script
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
+        // También por si el DOM ya está listo
+        if (document.readyState === 'complete') {
+            console.log('⚡ DOM ya completo, iniciando inmediatamente...');
             initApp();
         }
     </script>
